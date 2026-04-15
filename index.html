@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UMSR Smart Routine</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e8449">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="UMSR">
+<link rel="apple-touch-icon" href="icons/icon-192.svg">
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+
+<header>
+  <h1>UMSR Smart Routine</h1>
+  <div class="auth-user-bar" id="userBar">
+    <button onclick="toggleDark()" id="darkModeBtn" title="Toggle Dark Mode">
+      <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/></svg>
+      Dark
+    </button>
+    <button onclick="signOut()">
+      <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+      Log Out
+    </button>
+  </div>
+  <button id="menuBtn" onclick="toggleDrawer()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+  <!-- Live Clock -->
+  <div id="liveClock">
+    <div id="liveClockTime">00:00:00</div>
+    <div id="liveClockDate"></div>
+  </div>
+  <!-- PWA Install Button -->
+  <button id="installBtn" onclick="installApp()" title="Install App" style="
+    display:none;position:absolute;top:50%;right:12px;transform:translateY(-50%);
+    background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.6);
+    border-radius:8px;padding:5px 10px;font-size:0.75rem;cursor:pointer;
+    white-space:nowrap;
+  ">⬇ Install</button>
+</header>
+
+<!-- NAV DRAWER -->
+<div id="drawerOverlay" onclick="closeDrawer()"></div>
+<nav id="navDrawer">
+  <div id="drawerUserEmail"></div>
+  <button class="drawer-item" data-key="drawerHome" onclick="closeDrawer();showPage('home')">
+    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    Home
+  </button>
+  <button class="drawer-item" data-key="drawerNotif" id="notifDrawerBtn" onclick="closeDrawer();showPage('notifications')">
+    <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+    Notifications
+  </button>
+  <button class="drawer-item" data-key="drawerZikr" onclick="closeDrawer();showPage('zikr')">
+    <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 3-3m0 8c3.31 0 6 1.34 6 3v1H6v-1c0-1.66 2.69-3 6-3m0 6c1.1 0 2 .9 2 2v3h-4v-3c0-1.1.9-2 2-2z"/></svg>
+    Zikr
+  </button>
+  <div class="drawer-divider"></div>
+  <button class="drawer-item" data-key="drawerRate" onclick="closeDrawer();showPage('rate')">
+    <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+    Rate Us
+  </button>
+  <button class="drawer-item" data-key="drawerFeedback" onclick="closeDrawer();showPage('feedback')">
+    <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+    Feedback
+  </button>
+  <button class="drawer-item" data-key="drawerAbout" onclick="closeDrawer();showPage('about')">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+    About Us
+  </button>
+  <button class="drawer-item" data-key="drawerShare" onclick="shareApp()">
+    <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+    Share App
+  </button>
+  <button class="drawer-item" data-key="drawerSettings" onclick="closeDrawer();showPage('settings')">
+    <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+    Settings
+  </button>
+  <button class="drawer-item danger" data-key="drawerLogout" onclick="closeDrawer();signOut()">
+    <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+    Log Out
+  </button>
+</nav>
+
+<!-- AUTH OVERLAY -->
+<div id="authOverlay" class="show">
+  <div class="auth-box">
+    <h2 id="authTitle">Sign In</h2>
+    <p class="auth-error" id="authError"></p>
+    <input type="email" id="authEmail" placeholder="Email address">
+    <input type="password" id="authPassword" placeholder="Password">
+    <input type="password" id="authPassword2" placeholder="Confirm password" style="display:none">
+    <button class="auth-submit" onclick="authSubmit()">Sign In</button>
+    <div class="auth-switch">
+      <span id="authSwitchText">Don't have an account?</span>
+      <a onclick="toggleAuthMode()">Sign Up</a>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="add-row">
+    <input type="text" id="taskName" placeholder="Task name">
+    <div class="add-row-bottom">
+      <button id="timeDisplay" onclick="openClock()">-- : --  ▾</button>
+      <button class="add-btn" onclick="addTask()">➕ Add</button>
+    </div>
+  </div>
+
+  <h2>Today's Schedule</h2>
+  <div id="taskList">No tasks yet. Add one above!</div>
+
+  <div class="stats">
+    <h3>📊 Progress</h3>
+    <p id="progressText">0% completed</p>
+    <button onclick="testReminder()" style="margin-top:12px;background:#e67e22;font-size:0.85rem;padding:8px 14px;border-radius:8px;">🔔 Test Reminder</button>
+  </div>
+</div>
+
+<audio id="adhanAudio" src="https://cdn.islamic.network/audio/adhan/adhan.mp3"></audio>
+
+<!-- REMINDER TOAST -->
+<div id="reminderToast" style="
+  display:none;position:fixed;top:80px;left:50%;transform:translateX(-50%);
+  background:#1e8449;color:#fff;padding:14px 22px;border-radius:12px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.3);z-index:9000;
+  font-size:1rem;text-align:center;max-width:90vw;min-width:220px;
+  animation:slideDown .3s ease;
+">
+  <div style="font-size:1.4rem;margin-bottom:4px;">⏰</div>
+  <div id="reminderToastText"></div>
+</div>
+
+
+<!-- BOTTOM NAV -->
+<nav id="bottomNav">
+  <button class="nav-item active" id="navHome" onclick="showPage('home')">
+    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    Home
+  </button>
+  <button class="nav-plus" onclick="showPage('home');document.getElementById('taskName').focus()">+</button>
+  <button class="nav-item" id="navProfile" onclick="showPage('profile')">
+    <div class="nav-avatar" id="navAvatarLetter"></div>
+    Profile
+  </button>
+</nav>
+
+<!-- PROFILE PAGE -->
+<!-- PROFILE PAGE -->
+<div id="profilePage">
+  <!-- Avatar -->
+  <div class="profile-avatar-wrap" onclick="document.getElementById('avatarFileInput').click()">
+    <div class="profile-avatar-big" id="profileAvatarBig"></div>
+    <div class="profile-avatar-edit">✏️</div>
+  </div>
+  <input type="file" id="avatarFileInput" accept="image/*" onchange="handleAvatarUpload(event)">
+  <div class="profile-display-name" id="profileDisplayName"></div>
+  <div class="profile-email" id="profileEmailText"></div>
+
+  <!-- Stats -->
+  <div class="profile-stat"><span>Total Tasks</span><span id="statTotal">0</span></div>
+  <div class="profile-stat"><span>Completed</span><span id="statDone">0</span></div>
+  <div class="profile-stat"><span>Pending</span><span id="statPending">0</span></div>
+
+  <!-- Change Name -->
+  <div class="profile-section-title">👤 Change Display Name</div>
+  <input type="text" class="profile-input" id="profNewName" placeholder="Enter your display name" maxlength="30">
+  <button class="profile-save-btn" onclick="changeName()">Save Name</button>
+  <div class="profile-msg" id="profNameMsg"></div>
+
+  <!-- Change Password -->
+  <div class="profile-section-title">🔒 Change Password</div>
+  <input type="password" class="profile-input" id="profCurrentPass" placeholder="Current password">
+  <input type="password" class="profile-input" id="profNewPass" placeholder="New password (min 6 chars)">
+  <input type="password" class="profile-input" id="profConfirmPass" placeholder="Confirm new password">
+  <button class="profile-save-btn" onclick="changePassword()">Save New Password</button>
+  <div class="profile-msg" id="profMsg"></div>
+
+  <button class="profile-signout" onclick="signOut()">Sign Out</button>
+</div>
+
+<!-- NOTIFICATIONS PAGE -->
+<div id="notificationsPage">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <h2>🔔 Notifications</h2>
+    <button id="notifClearBtn" onclick="clearNotifications()"
+      style="background:transparent;color:#e74c3c;border:1px solid #e74c3c;
+             border-radius:8px;padding:6px 12px;font-size:0.82rem;cursor:pointer;">
+      🗑 Clear All
+    </button>
+  </div>
+  <div id="notifList"><p class="notif-empty">No notifications yet.</p></div>
+</div>
+
+<!-- ZIKR PAGE -->
+<div id="zikrPage">
+  <!-- Category grid -->
+  <div id="zikrCatView">
+    <h2 class="zikr-page-title">Dua &amp; Adhkar</h2>
+    <div class="zikr-grid" id="zikrGrid"></div>
+  </div>
+  <!-- Detail view -->
+  <div class="zikr-detail" id="zikrDetailView">
+    <div class="zikr-detail-header">
+      <button class="zikr-back" onclick="showZikrCats()">&#8592;</button>
+      <h2 id="zikrDetailTitle"></h2>
+    </div>
+    <div id="zikrDetailList"></div>
+    <button style="width:100%;margin-top:8px;padding:10px;background:transparent;border:1px solid var(--border);color:var(--text);border-radius:8px;cursor:pointer;" id="zikrResetBtn" onclick="resetCatZikr()">↺ Reset Counts</button>
+  </div>
+</div>
+
+<!-- RATE PAGE -->
+<div id="ratePage">
+  <h2>⭐ Rate Us</h2>
+  <p style="margin-top:8px;opacity:0.6;">How would you rate UMSR Smart Routine?</p>
+  <div class="star-row" id="starRow">
+    <button class="star-btn" onclick="setRating(1)">★</button>
+    <button class="star-btn" onclick="setRating(2)">★</button>
+    <button class="star-btn" onclick="setRating(3)">★</button>
+    <button class="star-btn" onclick="setRating(4)">★</button>
+    <button class="star-btn" onclick="setRating(5)">★</button>
+  </div>
+  <p id="rateLabel" style="text-align:center;opacity:0.5;margin-bottom:12px;">Tap a star</p>
+  <button class="rate-submit" onclick="submitRating()">Submit Rating</button>
+</div>
+
+<!-- FEEDBACK PAGE -->
+<div id="feedbackPage">
+  <h2>💬 Feedback</h2>
+  <p style="margin-top:8px;opacity:0.6;">We'd love to hear your thoughts.</p>
+  <textarea class="feedback-textarea" id="feedbackText" placeholder="Write your feedback here..."></textarea>
+  <button class="feedback-submit" onclick="submitFeedback()">Send Feedback</button>
+</div>
+
+<!-- ABOUT PAGE -->
+<div id="aboutPage">
+  <div class="about-logo">U</div>
+  <h2 style="text-align:center;">UMSR Smart Routine</h2>
+  <div class="about-version">Version 1.0.0</div>
+  <p class="about-body" style="margin-top:16px;">
+    UMSR Smart Routine helps you organize your daily schedule, track your tasks, and stay consistent with your Zikr and worship goals.<br><br>
+    Built with simplicity and focus in mind — for a more productive and mindful day.
+  </p>
+  <p style="text-align:center;margin-top:20px;font-size:0.85rem;opacity:0.5;">© 2026 UMSR. All rights reserved.</p>
+</div>
+
+<!-- SETTINGS PAGE -->
+<div id="settingsPage">
+  <h2>⚙️ Settings</h2>
+  <div class="setting-row">
+    <span>12-Hour Time Format</span>
+    <label class="toggle-switch">
+      <input type="checkbox" id="settingTime" onchange="toggleTime()">
+      <span class="toggle-slider"></span>
+    </label>
+  </div>
+  <div class="setting-row">
+    <span>Dark Mode</span>
+    <label class="toggle-switch">
+      <input type="checkbox" id="settingDark" onchange="toggleDark()">
+      <span class="toggle-slider"></span>
+    </label>
+  </div>
+  <div class="setting-row">
+    <span>Sound Reminders</span>
+    <label class="toggle-switch">
+      <input type="checkbox" id="settingSound" checked onchange="saveSoundPref(this.checked)">
+      <span class="toggle-slider"></span>
+    </label>
+  </div>
+  <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:10px;">
+    <span>Language / Afaan / لغة</span>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="lang-btn" id="langEN" onclick="setLang('en')">🇬🇧 English</button>
+      <button class="lang-btn" id="langAR" onclick="setLang('ar')">🇸🇦 Arabic</button>
+      <button class="lang-btn" id="langOM" onclick="setLang('om')">🇪🇹 Afan Oromo</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLOCK MODAL -->
+<div class="modal-overlay" id="clockOverlay" onclick="overlayClick(event)">
+  <div class="clock-modal">
+    <div class="clock-header">
+      <span class="clock-hour active" id="dispHour" onclick="clockSetMode('hour')">12</span>
+      <span class="clock-colon">:</span>
+      <span class="clock-min" id="dispMin" onclick="clockSetMode('min')">00</span>
+      <div class="clock-ampm">
+        <button class="ampm-btn active" id="btnAM" onclick="setAMPM('AM')">AM</button>
+        <button class="ampm-btn" id="btnPM" onclick="setAMPM('PM')">PM</button>
+      </div>
+    </div>
+
+    <div class="clock-face-wrap" id="clockFaceWrap">
+      <div class="clock-face" id="clockFace">
+        <canvas id="clockCanvas" width="260" height="260"></canvas>
+      </div>
+    </div>
+
+    <div class="manual-input-wrap" id="manualWrap">
+      <input type="number" id="manHour" min="1" max="12" placeholder="12" oninput="manualChange()">
+      <span class="manual-sep">:</span>
+      <input type="number" id="manMin" min="0" max="59" placeholder="00" oninput="manualChange()">
+      <div class="manual-ampm">
+        <button id="manAM" class="active" onclick="setAMPM('AM')">AM</button>
+        <button id="manPM" onclick="setAMPM('PM')">PM</button>
+      </div>
+    </div>
+
+    <div class="clock-footer">
+      <button class="kbd-btn" onclick="toggleManual()" title="Keyboard input">⌨</button>
+      <div class="clock-footer-actions">
+        <button class="clock-action-btn" id="clockBtnClear" onclick="clearTime()">CLEAR</button>
+        <button class="clock-action-btn" id="clockBtnCancel" onclick="closeClock()">CANCEL</button>
+        <button class="clock-action-btn" id="clockBtnSet" onclick="confirmTime()">SET</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  // ===== PWA INSTALL =====
+  let _installPrompt = null;
+
+  window.addEventListener("beforeinstallprompt", e => {
+    e.preventDefault();
+    _installPrompt = e;
+    const btn = document.getElementById("installBtn");
+    if(btn) btn.style.display = "block";
+  });
+
+  function installApp(){
+    if(!_installPrompt) return;
+    _installPrompt.prompt();
+    _installPrompt.userChoice.then(result => {
+      if(result.outcome === "accepted"){
+        document.getElementById("installBtn").style.display = "none";
+      }
+      _installPrompt = null;
+    });
+  }
+
+  // Hide install button once app is installed
+  window.addEventListener("appinstalled", () => {
+    const btn = document.getElementById("installBtn");
+    if(btn) btn.style.display = "none";
+    _installPrompt = null;
+  });
+
+  // Register service worker
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.register("./sw.js")
+      .then(() => console.log("SW registered"))
+      .catch(e => console.log("SW error", e));
+  }
+</script>
+</body>
+</html>
